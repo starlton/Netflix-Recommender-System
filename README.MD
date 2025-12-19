@@ -1,61 +1,60 @@
 # Netflix Recommender System
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0-ee4c2c?style=for-the-badge&logo=pytorch)
+![Scikit-Learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Serving-009688?style=for-the-badge&logo=fastapi)
 ![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
 
-This project implements a production-style recommendation system inspired by real-world streaming platforms. It focuses on ranking-based evaluation, model comparison, and experimentation rather than simple prediction accuracy.
+This project implements a production-style recommendation system inspired by real-world streaming platforms. It focuses on item-based similarity, real-time inference, and accurate retrieval using K-Nearest Neighbors (KNN).
 
 ---
 
 ## Dataset
-**MovieLens 20M** is used as implicit feedback by treating ratings $\ge$ 4.0 as positive signals. This mirrors real-world systems where explicit negative feedback is rare.
+**MovieLens 20M** (or a subset thereof) is used to build the interaction matrix. The system processes raw `ratings.csv` data to establish relationships between users and items based on historical viewing preferences.
 
 ---
 
 ## Models
-I implemented a hybrid architecture to balance performance and interpretability:
-* **Popularity-based baseline**: Essential for cold-start scenarios and benchmarking.
-* **Matrix Factorization (ALS)**: Efficient latent factor learning using Alternating Least Squares.
-* **Neural Collaborative Filtering (NCF)**: A Deep Learning approach using PyTorch embeddings and MLP to capture non-linear interactions.
+I implemented a robust **Item-Based Collaborative Filtering** architecture:
+* **K-Nearest Neighbors (KNN)**: Uses `Cosine Similarity` on a sparse interaction matrix to find movies that are mathematically similar to a user's favorites.
+* **Scikit-Learn Implementation**: Leverages the `NearestNeighbors` algorithm with a `brute` force approach for exact precision.
+* **Sparse Matrix Optimization**: Utilizes `scipy.sparse.csr_matrix` to efficiently handle millions of user-item interactions in memory.
 
 ---
 
 ## Evaluation
-Offline evaluation focuses on **Ranking Metrics** rather than RMSE, as these better reflect how users interact with top-ranked recommendations:
-* **Precision@K**: The proportion of recommended items that are relevant.
-* **Recall@K**: The proportion of relevant items found in the top-K.
-* **NDCG@K**: A measure of ranking quality that penalizes relevant items appearing lower in the list.
+The system evaluates recommendations based on relevance and similarity metrics:
+* **Cosine Similarity**: Measures the angle between item vectors to determine closeness.
+* **Hit Rate**: The percentage of recommended items that align with held-out user preferences.
+* **Visual Inspection**: Qualitative assessment via the Netflix-style dashboard to ensure recommendations make intuitive sense (e.g., "Toy Story" yields other animation films).
 
 ---
 
 ## Online Simulation
-A custom **Epsilon-Greedy A/B Simulator** demonstrates the trade-off between exploration and exploitation.
-* **Goal**: Highlight the gap between offline performance (test set accuracy) and online reward (user clicks).
-* **Method**: "Replays" historical data as a live stream to test bandit strategies.
+The project includes a **Real-Time Web Interface** to simulate the user experience:
+* **Goal**: Bridge the gap between static offline metrics and real-time user interaction.
+* **Method**: A React-style frontend (embedded in FastAPI) that allows for instant "User ID" lookup and visualizes the inference speed and recommendation quality live.
 
 ---
 
 ## Key Insights
-* **Popularity is a strong and necessary baseline**: It performs surprisingly well and is crucial for new users.
-* **ALS offers an excellent performance/interpretability tradeoff**: Faster to train than deep learning while providing high-quality vectors.
-* **Offline gains do not always translate to online improvements**: A model with better NDCG might learn slower in a bandit setting due to poor exploration.
+* **Item-Based > User-Based**: For this dataset, finding similar *items* proved more stable and interpretable than finding similar *users*.
+* **Sparsity Handling**: The use of Compressed Sparse Row (CSR) matrices was critical; standard DataFrames consumed too much memory.
+* **Inference Speed**: Despite the large dataset, the KNN model (once fitted) provides sub-millisecond query times suitable for production APIs.
 
 ---
 
 ## Limitations
-* **No real-time user feedback**: The simulation uses historical replay, not live users.
-* **Simplified reward modeling**: Interactions are binary (click/no-click) rather than watch-time weighted.
-* **No distributed training or serving**: Currently runs on a single node (though served via FastAPI).
+* **Cold Start Problem**: New users or items with zero ratings cannot be recommended effectively until interaction data is gathered.
+* **Scalability**: The `brute` force algorithm is accurate but computationally expensive as the item catalog grows into the millions.
+* **Single-Source Recommendations**: Currently heavily weighs the user's top-rated item; aggregating neighbors from multiple top items would improve diversity.
 
 ---
 
 ## Future Work
-* **Cold-start modeling**: Integrate content-based embeddings (BERT on movie plots) for new items.
-* **Causal uplift modeling**: Estimate the *incremental* impact of a recommendation.
-* **Distributed inference**: Scale the serving layer using Docker/Kubernetes.
-* **Vector Search**: Move to a vector database (FAISS/Pinecone) for retrieving from millions of items.
+* **Approximate Nearest Neighbors (ANN)**: Migrate to libraries like FAISS or Annoy for faster retrieval at scale.
+* **Hybrid Filtering**: Incorporate movie metadata (genres, tags) to solve the cold-start problem.
+* **Vector Database**: Store embeddings in Pinecone or Milvus for distributed retrieval.
 
 ---
 
@@ -79,7 +78,7 @@ MOVIE RECOMMENDER/
 │   └── processed/           # Processed interaction matrices
 │
 ├── models/
-│   ├── matrix_factorization.py  # ALS/SVD implementation
+│   ├── knn.py                   # KNN Model Logic
 │   ├── neural_cf.py             # PyTorch Neural Collaborative Filtering
 │   └── popularity.py            # Baseline model
 │
@@ -97,4 +96,5 @@ MOVIE RECOMMENDER/
 ├── config.yaml              # Hyperparameters and paths
 ├── requirements.txt         # Dependencies
 └── README.md                # Project documentation
+
 ```
