@@ -79,8 +79,9 @@ MOVIE RECOMMENDER/
 │
 ├── models/
 │   ├── knn.py                   # KNN Model Logic
-│   ├── neural_cf.py             # PyTorch Neural Collaborative Filtering
-│   └── popularity.py            # Baseline model
+│   ├── matrix_factorization.py  # Scikit-Learn SVD Implementation
+│   └── neural_cf.py             # PyTorch Neural Collaborative Filtering
+    └── popularity.py            # Baseline model
 │
 ├── evaluation/
 │   ├── metrics.py           # Custom implementations of NDCG, Precision, Recall
@@ -98,3 +99,4 @@ MOVIE RECOMMENDER/
 └── README.md                # Project documentation
 
 ```
+
