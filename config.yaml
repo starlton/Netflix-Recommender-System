@@ -1,0 +1,15 @@
+data:
+  raw_path: data/raw/ml-20m 
+  processed_path: data/processed/interactions.csv 
+
+model: 
+  als:
+    factors: 64 
+    regularization: 0.1 
+    iterations: 20 
+
+evaluation: 
+  k: 10 
+
+simulation: 
+  epsilon: 0.1 
